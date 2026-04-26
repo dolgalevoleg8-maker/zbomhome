@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Мебель РФ</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   МЕБЕЛЬ РФ · LIVE DASHBOARD
+   Данные: Google Sheets API
+   Цвета: ZBOM Brandbook — Gold #A88062, Silver #B2B3B3
+═══════════════════════════════════════════ */
+:root {
+  --white:#fff;--off:#fafaf8;--paper:#f4f2ee;
+  --gold:#A88062;--gold-l:rgba(168,128,98,.1);--gold-m:rgba(168,128,98,.3);
+  --silver:#B2B3B3;--ink:#1D1D1B;--ink2:#5a5a58;--ink3:#999996;--ink4:#d0cfcc;
+  --red:#9B3A2E;--green:#2E6B3A;--line:#e8e6e1;
+  --kirill:#6a9fb5;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--white)}
+body{font-family:'Barlow',sans-serif;color:var(--ink);font-size:14px;font-weight:300}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* HEADER */
+.hdr{background:var(--ink);padding:env(safe-area-inset-top,44px) 20px 0;flex-shrink:0}
+.hdr-in{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px}
+.logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--gold);letter-spacing:.08em}
+.logo-s{font-size:9px;font-weight:300;color:rgba(255,255,255,.35);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+.live{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:300;letter-spacing:.12em;color:rgba(255,255,255,.4);text-transform:uppercase}
+.dot{width:5px;height:5px;border-radius:50%;background:#6fba7f;animation:blink 2.5s infinite}
+@keyframes blink{0%,100%{opacity:1}60%{opacity:.2}}
+
+/* TABS */
+.tabs{background:var(--ink);display:flex;overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:11px 18px;font-family:'Barlow',sans-serif;font-size:10px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color .2s}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--off)}
+.scroll::-webkit-scrollbar{display:none}
+
+/* PAGE */
+.page{display:none;padding:20px 16px calc(env(safe-area-inset-bottom,20px) + 20px)}
+.page.active{display:block;animation:up .22s ease}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* LOADER */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px}
+.spinner{width:32px;height:32px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:11px;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase}
+
+/* ERROR */
+.error-box{background:var(--white);border:1px solid #f0d8d8;border-radius:4px;padding:20px;margin-bottom:12px}
+.error-ttl{font-size:12px;font-weight:500;color:var(--red);margin-bottom:8px}
+.error-msg{font-size:11px;color:var(--ink2);line-height:1.6}
+.error-step{background:var(--paper);border-radius:4px;padding:14px;margin-top:12px}
+.error-step h3{font-size:11px;font-weight:500;color:var(--ink);margin-bottom:8px;letter-spacing:.06em}
+.error-step p{font-size:11px;color:var(--ink2);line-height:1.7;margin-bottom:6px}
+.error-step a{color:var(--gold);text-decoration:none}
+.error-step code{background:#f0ece6;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:10px;color:var(--ink)}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi-row.one{grid-template-columns:1fr}
+.kpi-row.three{grid-template-columns:1fr 1fr 1fr}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.4}
+.kpi.accent::after{opacity:1}
+.kpi.full{grid-column:1/-1}
+.kpi-l{font-size:9px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.kpi-v{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:var(--ink);line-height:1}
+.kpi-v.gold{color:var(--gold)}
+.kpi-v.red{color:var(--red)}
+.kpi-v.sm{font-size:20px}
+.kpi-s{font-size:10px;color:var(--ink3);margin-top:5px;font-weight:300}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:10px}
+.card-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+.card-t{font-size:9px;font-weight:400;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.card-n{font-size:9px;color:var(--ink4);letter-spacing:.06em}
+
+/* PERSON */
+.person{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:20px;margin-bottom:10px}
+.person-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.p-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400}
+.p-role{font-size:9px;font-weight:300;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:3px}
+.p-amt{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;text-align:right}
+.p-pct{font-size:9px;color:var(--ink3);text-align:right;margin-top:3px}
+.p-bar{height:1px;background:var(--line);margin-bottom:16px;overflow:hidden}
+.p-bar-fill{height:100%}
+.p-rows{display:flex;flex-direction:column;gap:7px}
+.p-row{display:flex;justify-content:space-between}
+.p-lbl{font-size:11px;color:var(--ink2);font-weight:300}
+.p-val{font-size:11px;color:var(--ink);font-weight:400}
+
+/* MONTH BARS */
+.m-list{display:flex;flex-direction:column;gap:10px}
+.m-item{display:flex;align-items:center;gap:10px}
+.m-l{font-size:10px;color:var(--ink3);width:38px;flex-shrink:0;font-weight:300}
+.m-track{flex:1;height:12px;background:var(--paper);border-radius:2px;overflow:hidden}
+.m-fill{height:100%;border-radius:2px;min-width:2px;transition:width .8s ease}
+.m-v{font-size:10px;color:var(--ink2);width:52px;text-align:right;flex-shrink:0}
+
+/* CAT */
+.c-list{display:flex;flex-direction:column;gap:13px}
+.c-item{display:flex;align-items:center;gap:12px}
+.c-line{width:2px;height:36px;border-radius:1px;flex-shrink:0}
+.c-body{flex:1}
+.c-name{font-size:12px;color:var(--ink);font-weight:400;margin-bottom:5px}
+.c-track{height:1px;background:var(--line);overflow:hidden}
+.c-bar{height:100%}
+.c-right{text-align:right}
+.c-pct{font-size:11px;color:var(--ink2);font-weight:400}
+.c-sub{font-size:10px;color:var(--ink3)}
+
+/* TX */
+.tx-list{display:flex;flex-direction:column}
+.tx{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.tx:last-child{border-bottom:none}
+.tx-line{width:2px;height:28px;border-radius:1px;flex-shrink:0}
+.tx-body{flex:1;min-width:0}
+.tx-desc{font-size:12px;color:var(--ink);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-meta{font-size:10px;color:var(--ink3);margin-top:2px;font-weight:300}
+.tx-amt{font-size:12px;font-weight:400;white-space:nowrap;text-align:right}
+
+/* BALANCE */
+.b-grp{margin-bottom:14px}
+.b-head{font-size:9px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.b-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.b-row:last-child{border-bottom:none}
+.b-lbl{font-size:12px;color:var(--ink2);font-weight:300}
+.b-val{font-size:12px;color:var(--ink);font-weight:400}
+.b-row.tot .b-lbl,.b-row.tot .b-val{color:var(--gold);font-weight:500}
+
+/* OPU */
+.opu-wrap{overflow-x:auto}
+.opu-table{width:100%;border-collapse:collapse;min-width:480px}
+.opu-table th{font-size:9px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:6px 5px;text-align:right;border-bottom:1px solid var(--line)}
+.opu-table th:first-child{text-align:left}
+.opu-table td{font-size:10px;color:var(--ink2);font-weight:300;padding:7px 5px;text-align:right;border-bottom:1px solid rgba(0,0,0,.04)}
+.opu-table td:first-child{text-align:left}
+.opu-table tr.sec td{color:var(--ink);font-weight:500;padding-top:14px;border-bottom:none;font-size:10px}
+.opu-table tr.tot td{color:var(--red);font-weight:500;border-top:1px solid var(--line);padding-top:10px;font-size:10px}
+
+/* CHIPS */
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;font-size:10px;font-weight:400;letter-spacing:.08em;padding:6px 14px;border:1px solid var(--line);border-radius:20px;color:var(--ink2);background:var(--white);cursor:pointer;transition:all .15s}
+.chip.active{color:var(--gold);border-color:var(--gold-m);background:var(--gold-l)}
+
+/* LAST UPDATE */
+.updated{font-size:9px;color:var(--ink4);text-align:right;margin-bottom:8px;letter-spacing:.06em}
+
+.sep{height:1px;background:var(--line);margin:14px 0}
+.chart-box{position:relative}
+.scroll-inner{overflow-y:auto;max-height:400px}
+.scroll-inner::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="hdr-in">
+    <div>
+      <div class="logo">Мебель РФ</div>
+      <div class="logo-s">Финансовый отчёт</div>
+    </div>
+    <div class="live"><div class="dot"></div><span id="live-txt">загрузка...</span></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="go('overview',this)">Обзор</button>
+  <button class="tab" onclick="go('investors',this)">Учредители</button>
+  <button class="tab" onclick="go('expenses',this)">Расходы</button>
+  <button class="tab" onclick="go('pnl',this)">ОПиУ</button>
+  <button class="tab" onclick="go('balance',this)">Баланс</button>
+  <button class="tab" onclick="go('ops',this)">Операции</button>
+</div>
+
+<div class="scroll">
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="page-overview">
+    <div id="overview-loader" class="loading"><div class="spinner"></div><div class="loading-txt">Загружаем данные из таблицы...</div></div>
+    <div id="overview-content" style="display:none">
+      <div class="updated" id="upd-time"></div>
+      <div class="kpi-row one">
+        <div class="kpi accent">
+          <div class="kpi-l">Всего вложено учредителями</div>
+          <div class="kpi-v gold" id="kpi-total">—</div>
+          <div class="kpi-s">август 2025 — апрель 2026 · 9 месяцев</div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-l">Павел</div>
+          <div class="kpi-v sm" id="kpi-pavel" style="color:var(--gold)">—</div>
+          <div class="kpi-s" id="kpi-pavel-pct">% вложений</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Кирилл</div>
+          <div class="kpi-v sm" id="kpi-kirill" style="color:var(--kirill)">—</div>
+          <div class="kpi-s" id="kpi-kirill-pct">% вложений</div>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-l">Турбо-Подс</div>
+          <div class="kpi-v sm" id="kpi-turbo" style="color:var(--silver)">—</div>
+          <div class="kpi-s">юр. лицо</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">ИП</div>
+          <div class="kpi-v sm" id="kpi-ip" style="color:var(--silver)">—</div>
+          <div class="kpi-s">юр. лицо</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-t">Расходы по месяцам</span>
+          <span class="card-n">из таблицы</span>
+        </div>
+        <div class="chart-box"><canvas id="c-months" height="160"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t" style="margin-bottom:16px">Структура расходов</div>
+        <div class="c-list">
+          <div class="c-item"><div class="c-line" style="background:#A88062"></div><div class="c-body"><div class="c-name">Ремонт и строители</div><div class="c-track"><div class="c-bar" style="width:100%;background:#A88062"></div></div></div><div class="c-right"><div class="c-pct">44%</div><div class="c-sub">~7,5 млн</div></div></div>
+          <div class="c-item"><div class="c-line" style="background:var(--kirill)"></div><div class="c-body"><div class="c-name">Аренда помещения</div><div class="c-track"><div class="c-bar" style="width:41%;background:var(--kirill)"></div></div></div><div class="c-right"><div class="c-pct">18%</div><div class="c-sub">~3,0 млн</div></div></div>
+          <div class="c-item"><div class="c-line" style="background:#2E6B3A"></div><div class="c-body"><div class="c-name">ФОТ · Зарплаты</div><div class="c-track"><div class="c-bar" style="width:34%;background:#2E6B3A"></div></div></div><div class="c-right"><div class="c-pct">15%</div><div class="c-sub">~2,5 млн</div></div></div>
+          <div class="c-item"><div class="c-line" style="background:var(--silver)"></div><div class="c-body"><div class="c-name">Оборудование · Техника</div><div class="c-track"><div class="c-bar" style="width:27%;background:var(--silver)"></div></div></div><div class="c-right"><div class="c-pct">12%</div><div class="c-sub">~2,0 млн</div></div></div>
+          <div class="c-item"><div class="c-line" style="background:#888"></div><div class="c-body"><div class="c-name">Маркетинг · СММ · HH</div><div class="c-track"><div class="c-bar" style="width:14%;background:#888"></div></div></div><div class="c-right"><div class="c-pct">6%</div><div class="c-sub">~1,0 млн</div></div></div>
+          <div class="c-item"><div class="c-line" style="background:#c0b8ae"></div><div class="c-body"><div class="c-name">Переводчики · Прочее</div><div class="c-track"><div class="c-bar" style="width:11%;background:#c0b8ae"></div></div></div><div class="c-right"><div class="c-pct">5%</div><div class="c-sub">~0,9 млн</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-t">Последние операции</span><span class="card-n">из таблицы</span></div>
+        <div class="tx-list" id="recent-tx"></div>
+      </div>
+    </div>
+    <div id="overview-error" style="display:none"></div>
+  </div>
+
+  <!-- INVESTORS -->
+  <div class="page" id="page-investors">
+    <div id="investors-loader" class="loading"><div class="spinner"></div><div class="loading-txt">Загружаем...</div></div>
+    <div id="investors-content" style="display:none">
+      <div class="person">
+        <div class="person-top">
+          <div><div class="p-name" style="color:var(--gold)">Павел</div><div class="p-role">Учредитель</div></div>
+          <div><div class="p-amt" style="color:var(--gold)" id="inv-pavel">—</div><div class="p-pct" id="inv-pavel-pct">—</div></div>
+        </div>
+        <div class="p-bar"><div class="p-bar-fill" id="inv-pavel-bar" style="background:var(--gold)"></div></div>
+        <div class="p-rows">
+          <div class="p-row"><span class="p-lbl">Ремонт (Антон)</span><span class="p-val">3 750 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Аренда помещения</span><span class="p-val">1 474 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">ЗП сотрудников</span><span class="p-val">890 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Маркетинг · СММ</span><span class="p-val">572 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Мебель · Китай</span><span class="p-val">478 000 ₽</span></div>
+        </div>
+      </div>
+      <div class="person">
+        <div class="person-top">
+          <div><div class="p-name" style="color:var(--kirill)">Кирилл</div><div class="p-role">Учредитель</div></div>
+          <div><div class="p-amt" style="color:var(--kirill)" id="inv-kirill">—</div><div class="p-pct" id="inv-kirill-pct">—</div></div>
+        </div>
+        <div class="p-bar"><div class="p-bar-fill" id="inv-kirill-bar" style="background:var(--kirill)"></div></div>
+        <div class="p-rows">
+          <div class="p-row"><span class="p-lbl">Аренда помещения</span><span class="p-val">847 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Ремонт · Строители</span><span class="p-val">826 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Мебель · Китай</span><span class="p-val">478 000 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">ЗП · Переводчики</span><span class="p-val">402 000 ₽</span></div>
+        </div>
+      </div>
+      <div class="person" style="opacity:.55">
+        <div class="person-top">
+          <div><div class="p-name" style="color:var(--silver)">Юр. лица</div><div class="p-role">Турбо-Подс · ИП</div></div>
+          <div><div class="p-amt" style="color:var(--silver)" id="inv-turbo">—</div><div class="p-pct">юр. лица</div></div>
+        </div>
+        <div class="p-rows">
+          <div class="p-row"><span class="p-lbl">Техника (экспо)</span><span class="p-val">495 419 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">CRM · Битрикс</span><span class="p-val">316 596 ₽</span></div>
+          <div class="p-row"><span class="p-lbl">Переводчики</span><span class="p-val">235 200 ₽</span></div>
+        </div>
+      </div>
+      <div class="person" style="opacity:.3">
+        <div class="person-top">
+          <div><div class="p-name">Эльвин / Эмин</div><div class="p-role">Вышел из проекта</div></div>
+          <div><div class="p-amt" id="inv-elvin">—</div><div class="p-pct">архивные данные</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-t" style="margin-bottom:16px">Динамика вложений</div>
+        <div class="chart-box"><canvas id="c-inv" height="160"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="page" id="page-expenses">
+    <div class="kpi-row three">
+      <div class="kpi"><div class="kpi-l">Всего</div><div class="kpi-v gold" style="font-size:18px">16,7м</div><div class="kpi-s">9 мес.</div></div>
+      <div class="kpi"><div class="kpi-l">Максимум</div><div class="kpi-v sm" style="font-size:18px">3,1м</div><div class="kpi-s">фев 2026</div></div>
+      <div class="kpi"><div class="kpi-l">Среднее</div><div class="kpi-v sm" style="font-size:18px">1,9м</div><div class="kpi-s">в месяц</div></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:16px">По месяцам</div>
+      <div class="m-list" id="m-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:16px">Накопленные расходы</div>
+      <div class="chart-box"><canvas id="c-cum" height="140"></canvas></div>
+    </div>
+  </div>
+
+  <!-- P&L -->
+  <div class="page" id="page-pnl">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-l">Выручка</div><div class="kpi-v sm">0 ₽</div><div class="kpi-s">до апр 2026 нет</div></div>
+      <div class="kpi"><div class="kpi-l">Убыток накопл.</div><div class="kpi-v sm red">−11,8 млн</div><div class="kpi-s">операционный</div></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:16px">Накопленный убыток</div>
+      <div class="chart-box"><canvas id="c-loss" height="130"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-t">ОПиУ по месяцам</span><span class="card-n">авг 25 — мар 26</span></div>
+      <div class="opu-wrap">
+        <table class="opu-table">
+          <thead><tr><th>Статья</th><th>Авг</th><th>Сен</th><th>Окт</th><th>Ноя</th><th>Дек</th><th>Янв</th><th>Фев</th><th>Мар</th></tr></thead>
+          <tbody>
+            <tr class="sec"><td colspan="9">Адм. расходы</td></tr>
+            <tr><td>— ФОТ</td><td>130к</td><td>130к</td><td>305к</td><td>156к</td><td>237к</td><td>156к</td><td>185к</td><td>300к</td></tr>
+            <tr><td>— Юристы · проч.</td><td>143к</td><td>9к</td><td>26к</td><td>209к</td><td>199к</td><td>23к</td><td>210к</td><td>374к</td></tr>
+            <tr class="sec"><td colspan="9">Коммерческие расходы</td></tr>
+            <tr><td>— Аренда</td><td>—</td><td>150к</td><td>250к</td><td>250к</td><td>250к</td><td>550к</td><td>550к</td><td>554к</td></tr>
+            <tr><td>— Ремонт</td><td>—</td><td>205к</td><td>200к</td><td>—</td><td>1500к</td><td>800к</td><td>2095к</td><td>448к</td></tr>
+            <tr><td>— СММ · реклама</td><td>—</td><td>98к</td><td>—</td><td>—</td><td>95к</td><td>229к</td><td>212к</td><td>273к</td></tr>
+            <tr class="tot"><td>УБЫТОК</td><td>−273к</td><td>−592к</td><td>−782к</td><td>−615к</td><td>−2131к</td><td>−1759к</td><td>−3252к</td><td>−1949к</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BALANCE -->
+  <div class="page" id="page-balance">
+    <div class="kpi-row">
+      <div class="kpi accent"><div class="kpi-l">Итого активы</div><div class="kpi-v gold sm">3 173 203 ₽</div><div class="kpi-s">апрель 2026</div></div>
+      <div class="kpi"><div class="kpi-l">Осн. средства</div><div class="kpi-v sm">1 577 875 ₽</div><div class="kpi-s">техника и мебель</div></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:16px">Структура активов</div>
+      <div class="chart-box"><canvas id="c-bal" height="160"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t" style="margin-bottom:16px">Баланс · апрель 2026</div>
+      <div class="b-grp">
+        <div class="b-head">Активы</div>
+        <div class="b-row"><span class="b-lbl">Основные средства</span><span class="b-val">1 577 875 ₽</span></div>
+        <div class="b-row"><span class="b-lbl">Дебиторская задолж.</span><span class="b-val">1 462 757 ₽</span></div>
+        <div class="b-row"><span class="b-lbl">НДС к вычету</span><span class="b-val">132 496 ₽</span></div>
+        <div class="b-row"><span class="b-lbl">Денежные средства</span><span class="b-val">75 ₽</span></div>
+        <div class="b-row tot"><span class="b-lbl">Итого активы</span><span class="b-val">3 173 203 ₽</span></div>
+      </div>
+      <div class="sep"></div>
+      <div class="b-grp">
+        <div class="b-head">Пассивы</div>
+        <div class="b-row"><span class="b-lbl">Собственные средства</span><span class="b-val">14 991 054 ₽</span></div>
+        <div class="b-row"><span class="b-lbl" style="color:var(--red)">Накопленный убыток</span><span class="b-val" style="color:var(--red)">−11 817 851 ₽</span></div>
+        <div class="b-row tot"><span class="b-lbl">Итого пассивы</span><span class="b-val">3 173 203 ₽</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPS -->
+  <div class="page" id="page-ops">
+    <div class="chips">
+      <button class="chip active" onclick="filt('all',this)">Все</button>
+      <button class="chip" onclick="filt('pavel',this)">Павел</button>
+      <button class="chip" onclick="filt('kirill',this)">Кирилл</button>
+      <button class="chip" onclick="filt('turbo',this)">Турбо-Подс</button>
+      <button class="chip" onclick="filt('ip',this)">ИП</button>
+      <button class="chip" onclick="filt('apr',this)">Апр 2026</button>
+      <button class="chip" onclick="filt('mar',this)">Мар 2026</button>
+      <button class="chip" onclick="filt('feb',this)">Фев 2026</button>
+      <button class="chip" onclick="filt('jan',this)">Янв 2026</button>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-t">Операции</span><span class="card-n" id="ops-n">загрузка...</span></div>
+      <div class="scroll-inner"><div class="tx-list" id="all-tx"></div></div>
+    </div>
+  </div>
+
+</div><!-- /scroll -->
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// КОНФИГУРАЦИЯ — СЮДА ВСТАВЬ СВОЙ API КЛЮЧ
+// ═══════════════════════════════════════════════════════════════
+const API_KEY = 'AIzaSyCHwei47Imky09D2pfkWF46uK3liWxe4Bo';
+const SHEET_ID = '1-cO5W_n5PtTK0-Vo34wIiCUPFMw6zflyDsqBOcYwnJw';
+const SHEET_NAME = 'Расходы компании';
+// ═══════════════════════════════════════════════════════════════
+
+const WC = {pavel:'#A88062',kirill:'#6a9fb5',turbo:'#B2B3B3',ip:'#7aaa7a',elvin:'#bbb'};
+const WN = {pavel:'Павел',kirill:'Кирилл',turbo:'Турбо-Подс',ip:'ИП',elvin:'Эльвин'};
+
+// Навигация
+function go(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  el.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+}
+
+// Форматирование числа
+function fmt(n) {
+  if(!n && n!==0) return '—';
+  return Math.abs(n).toLocaleString('ru-RU')+' ₽';
+}
+function fmtM(n) {
+  if(!n) return '—';
+  return (n/1000000).toFixed(1)+' млн ₽';
+}
+
+// ─── ЗАГРУЗКА ДАННЫХ ИЗ GOOGLE SHEETS ───
+async function loadSheetData(range) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || 'Ошибка API');
+  }
+  const data = await resp.json();
+  return data.values || [];
+}
+
+// ─── ПАРСИМ СТРОКУ В ЧИСЛО ───
+function parseNum(s) {
+  if(!s) return 0;
+  // Убираем р. руб и прочие нечисловые символы кроме цифр, точки, запятой, минуса
+  const cleaned = String(s)
+    .replace(/р\./gi, '')
+    .replace(/руб/gi, '')
+    .replace(/[^\d.,\-]/g, '')
+    .replace(',', '.');
+  return parseFloat(cleaned) || 0;
+}
+
+// ─── ОПРЕДЕЛЯЕМ ПЛАТЕЛЬЩИКА ───
+function getWho(s) {
+  if(!s) return null;
+  const l = s.toLowerCase();
+  if(l.includes('турбо') || l.includes('turbo')) return 'turbo';
+  if(l.includes('ип') && !l.includes('кирилл') && !l.includes('павел')) return 'ip';
+  if(l.includes('павел') || l.includes('паша')) return 'pavel';
+  if(l.includes('кирилл')) return 'kirill';
+  if(l.includes('эльвин') || l.includes('эмин')) return 'elvin';
+  return null;
+}
+
+// ─── ПАРСИМ ВСЕ ОПЕРАЦИИ ───
+function parseTransactions(rows) {
+  const txs = [];
+  const months = {авг:0,сен:1,окт:2,ноя:3,дек:4,янв:5,фев:6,мар:7,апр:8};
+  let currentMonth = null;
+  const monthData = Array(9).fill(0);
+
+  for(const row of rows) {
+    if(!row || row.length < 2) continue;
+    const dateCell = String(row[0]||'').trim();
+    const descCell = String(row[1]||'').trim();
+    const whoCell  = String(row[2]||'').trim();
+    const amtCell  = String(row[5]||'').trim();
+
+    // Заголовок месяца
+    const mKey = descCell.toLowerCase().substring(0,3);
+    if(months[mKey] !== undefined && !dateCell) {
+      currentMonth = months[mKey];
+      continue;
+    }
+
+    // Строка с данными
+    if(dateCell && dateCell.match(/\d/) && amtCell) {
+      const amt = parseNum(amtCell);
+      if(amt > 0) {
+        const who = getWho(whoCell);
+        const tx = {date: dateCell.substring(0,5), desc: descCell, who, amt, month: currentMonth};
+        txs.push(tx);
+        if(currentMonth !== null) monthData[currentMonth] += amt;
+      }
+    }
+  }
+  return {txs, monthData};
+}
+
+// ─── ПОКАЗЫВАЕМ ОШИБКУ ───
+function showError(containerId, msg) {
+  const el = document.getElementById(containerId+'-error');
+  if(!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="error-box">
+      <div class="error-ttl">Не удалось загрузить данные из таблицы</div>
+      <div class="error-msg">${msg}</div>
+      <div class="error-step">
+        <h3>Что нужно сделать — 3 простых шага:</h3>
+        <p><strong>Шаг 1.</strong> Открой <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></p>
+        <p><strong>Шаг 2.</strong> Создай проект → Включи Google Sheets API → Создай API ключ (Credentials → Create → API Key)</p>
+        <p><strong>Шаг 3.</strong> Вставь ключ в файл вместо текста <code>AIzaSyCHwei47Imky09D2pfkWF46uK3liWxe4Bo</code></p>
+        <p style="margin-top:10px;color:#9B3A2E;">Также убедись что таблица открыта для всех у кого есть ссылка (Настройки доступа → Читатель)</p>
+      </div>
+    </div>`;
+  document.getElementById(containerId+'-loader').style.display = 'none';
+}
+
+// ─── СТРОИМ ГРАФИКИ ───
+Chart.defaults.color = '#999996';
+Chart.defaults.borderColor = 'rgba(0,0,0,.06)';
+Chart.defaults.font.family = "'Barlow',sans-serif";
+Chart.defaults.font.size = 9;
+
+let chartsBuilt = false;
+const MONTH_LABELS = ['Авг','Сен','Окт','Ноя','Дек','Янв','Фев','Мар','Апр'];
+
+function buildCharts(monthData) {
+  if(chartsBuilt) return;
+  chartsBuilt = true;
+  const gc = 'rgba(0,0,0,.04)';
+
+  new Chart(document.getElementById('c-months'),{type:'bar',
+    data:{labels:MONTH_LABELS,datasets:[{data:monthData,
+      backgroundColor:MONTH_LABELS.map((_,i)=>i===8?'rgba(168,128,98,.8)':i===6?'rgba(155,58,46,.5)':'rgba(0,0,0,.07)'),
+      borderColor:MONTH_LABELS.map((_,i)=>i===8?'#A88062':i===6?'#9B3A2E':'rgba(0,0,0,.1)'),
+      borderWidth:1,borderRadius:2}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${c.parsed.y.toLocaleString('ru-RU')} ₽`}}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:gc},ticks:{callback:v=>(v/1000000).toFixed(1)+'м'}}}}});
+
+  const PAV=[753200,484622,1006791,509671,2000157,1832000,912200,584190,1982592];
+  const KIR=[620827,443822,930827,105300,76727,1091776,1012980,604000,385151];
+  new Chart(document.getElementById('c-inv'),{type:'bar',
+    data:{labels:MONTH_LABELS,datasets:[
+      {label:'Павел',data:PAV,backgroundColor:'rgba(168,128,98,.55)',borderRadius:2},
+      {label:'Кирилл',data:KIR,backgroundColor:'rgba(106,159,181,.55)',borderRadius:2}]},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{boxWidth:8,padding:10,font:{size:9}}},tooltip:{callbacks:{label:c=>`  ${c.dataset.label}: ${c.parsed.y.toLocaleString('ru-RU')} ₽`}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:gc},ticks:{callback:v=>(v/1000).toFixed(0)+'к'}}}}});
+
+  const CUM=monthData.reduce((a,v,i)=>{a.push((a[i-1]||0)+v);return a;},[]);
+  new Chart(document.getElementById('c-cum'),{type:'line',
+    data:{labels:MONTH_LABELS,datasets:[{data:CUM,borderColor:'#A88062',backgroundColor:'rgba(168,128,98,.06)',tension:.35,fill:true,pointRadius:3,pointBackgroundColor:'#A88062',borderWidth:1.5}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${(c.parsed.y/1000000).toFixed(2)} млн ₽`}}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:gc},ticks:{callback:v=>(v/1000000).toFixed(0)+'м'}}}}});
+
+  const LOSS=[-272563,-864763,-1646354,-2261325,-4391867,-6150467,-9402543,-11351909,-11817851];
+  new Chart(document.getElementById('c-loss'),{type:'line',
+    data:{labels:MONTH_LABELS,datasets:[{data:LOSS,borderColor:'#9B3A2E',backgroundColor:'rgba(155,58,46,.05)',tension:.35,fill:true,pointRadius:3,pointBackgroundColor:'#9B3A2E',borderWidth:1.5}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  −${Math.abs(c.parsed.y).toLocaleString('ru-RU')} ₽`}}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:gc},ticks:{callback:v=>(v/1000000).toFixed(0)+'м'}}}}});
+
+  new Chart(document.getElementById('c-bal'),{type:'doughnut',
+    data:{labels:['Осн. средства','Дебит. задолж.','НДС к вычету'],
+      datasets:[{data:[1577875,1462757,132496],backgroundColor:['#A88062','#6a9fb5','#B2B3B3'],borderWidth:0,hoverOffset:4}]},
+    options:{cutout:'68%',plugins:{legend:{display:true,position:'right',labels:{boxWidth:8,padding:12,font:{size:10}}},tooltip:{callbacks:{label:c=>`  ${c.parsed.toLocaleString('ru-RU')} ₽`}}}}});
+
+  // Month bars
+  const maxE = Math.max(...monthData);
+  document.getElementById('m-bars').innerHTML = MONTH_LABELS.map((m,i)=>`
+    <div class="m-item">
+      <div class="m-l">${m}</div>
+      <div class="m-track"><div class="m-fill" style="width:${Math.round(monthData[i]/maxE*100)}%;background:${i===8?'#A88062':i===6?'#9B3A2E':'#d5cfc7'}"></div></div>
+      <div class="m-v">${(monthData[i]/1000).toFixed(0)}к</div>
+    </div>`).join('');
+}
+
+// ─── РЕНДЕР ОПЕРАЦИЙ ───
+let allTxs = [];
+function renderTx(el, list) {
+  el.innerHTML = list.length === 0
+    ? '<div style="padding:20px;text-align:center;color:var(--ink3);font-size:11px">Нет операций</div>'
+    : list.map(t=>`
+    <div class="tx">
+      <div class="tx-line" style="background:${WC[t.who]||'#ccc'}"></div>
+      <div class="tx-body">
+        <div class="tx-desc">${t.desc}</div>
+        <div class="tx-meta">${t.date} · <span style="color:${WC[t.who]||'#ccc'}">${WN[t.who]||t.who||'—'}</span></div>
+      </div>
+      <div class="tx-amt" style="color:var(--ink)">${t.amt.toLocaleString('ru-RU')} ₽</div>
+    </div>`).join('');
+}
+
+let curFilt = 'all';
+function filt(f, btn) {
+  curFilt = f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const mo = {apr:'.04',mar:'.03',feb:'.02',jan:'.01'};
+  let list = allTxs;
+  if(['pavel','kirill','turbo','ip','elvin'].includes(f)) list = allTxs.filter(t=>t.who===f);
+  else if(mo[f]) list = allTxs.filter(t=>t.date&&t.date.endsWith(mo[f]));
+  document.getElementById('ops-n').textContent = list.length+' записей';
+  renderTx(document.getElementById('all-tx'), list);
+}
+
+// ─── ГЛАВНАЯ ФУНКЦИЯ ЗАГРУЗКИ ───
+async function loadData() {
+  // Проверяем что ключ вставлен
+  if(API_KEY === 'ВСТАВЬ_СВОЙ_API_КЛЮЧ_ЗДЕСЬ') {
+    showError('overview', 'API ключ не вставлен. Следуй инструкции ниже.');
+    document.getElementById('investors-loader').style.display='none';
+    return;
+  }
+
+  try {
+    // Читаем счётчики вложений — строка 2, колонки J:N
+    const totalsRows = await loadSheetData(`${SHEET_NAME}!J2:N2`);
+    const elvin  = parseNum(totalsRows[0]?.[0]);
+    const kirill = parseNum(totalsRows[0]?.[1]);
+    const pavel  = parseNum(totalsRows[0]?.[2]);
+    const turbo  = parseNum(totalsRows[0]?.[3]);
+    const ip     = parseNum(totalsRows[0]?.[4]);
+    const total  = elvin + kirill + pavel + turbo + ip;
+    const active = kirill + pavel + turbo + ip; // без Эльвина
+
+    // Читаем все транзакции
+    const txRows = await loadSheetData(`${SHEET_NAME}!A2:F300`);
+    const {txs, monthData} = parseTransactions(txRows);
+    allTxs = [...txs].reverse(); // последние сверху
+
+    // ─── ОБНОВЛЯЕМ KPI ───
+    document.getElementById('kpi-total').textContent = total.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('kpi-pavel').textContent = pavel.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('kpi-kirill').textContent = kirill.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('kpi-turbo').textContent = turbo.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('kpi-ip').textContent = ip.toLocaleString('ru-RU')+' ₽';
+
+    const pavelPct = active ? Math.round(pavel/active*100) : 0;
+    const kirillPct = active ? Math.round(kirill/active*100) : 0;
+    document.getElementById('kpi-pavel-pct').textContent = pavelPct+'% от активных вложений';
+    document.getElementById('kpi-kirill-pct').textContent = kirillPct+'% от активных вложений';
+
+    // Учредители
+    document.getElementById('inv-pavel').textContent = pavel.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('inv-kirill').textContent = kirill.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('inv-turbo').textContent = (turbo+ip).toLocaleString('ru-RU')+' ₽';
+    document.getElementById('inv-elvin').textContent = elvin.toLocaleString('ru-RU')+' ₽';
+    document.getElementById('inv-pavel-pct').textContent = pavelPct+'% вложений';
+    document.getElementById('inv-kirill-pct').textContent = kirillPct+'% вложений';
+    document.getElementById('inv-pavel-bar').style.width = pavelPct+'%';
+    document.getElementById('inv-kirill-bar').style.width = kirillPct+'%';
+
+    // Последние операции
+    renderTx(document.getElementById('recent-tx'), allTxs.slice(0,10));
+
+    // Все операции
+    filt('all', document.querySelector('.chip'));
+
+    // Время обновления
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('upd-time').textContent = `Обновлено ${timeStr}`;
+    document.getElementById('live-txt').textContent = 'live';
+
+    // Строим графики
+    buildCharts(monthData.length === 9 ? monthData : [1920320,1068444,1737591,614971,2130542,2058600,3144783,2074978,1961141]);
+
+    // Показываем контент
+    document.getElementById('overview-loader').style.display='none';
+    document.getElementById('overview-content').style.display='block';
+    document.getElementById('investors-loader').style.display='none';
+    document.getElementById('investors-content').style.display='block';
+
+  } catch(err) {
+    showError('overview', err.message);
+    document.getElementById('investors-loader').style.display='none';
+    document.getElementById('live-txt').textContent = 'ошибка';
+    console.error(err);
+  }
+}
+
+// Запускаем при загрузке
+loadData();
+
+// Обновляем каждые 5 минут автоматически
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
