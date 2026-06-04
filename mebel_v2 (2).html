@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Мебель РФ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════
+   МЕБЕЛЬ РФ · EXECUTIVE DASHBOARD v2
+   Design: Pure White Luxury
+   Font: Cormorant Garamond + Inter
+   Palette: #000 ink / #A88062 gold / #F5F3EF cream
+══════════════════════════════════════ */
+:root {
+  --white: #ffffff;
+  --cream: #F8F6F2;
+  --cream2: #F2EFE9;
+  --ink: #0D0D0D;
+  --ink2: #3A3A3A;
+  --ink3: #8A8680;
+  --ink4: #C4C0BA;
+  --gold: #A88062;
+  --gold2: #8B6548;
+  --gold-l: rgba(168,128,98,.08);
+  --gold-m: rgba(168,128,98,.2);
+  --red: #7D2E2E;
+  --red-l: rgba(125,46,46,.08);
+  --green: #2A5C3F;
+  --green-l: rgba(42,92,63,.08);
+  --border: rgba(0,0,0,.07);
+  --border2: rgba(0,0,0,.12);
+  --shadow: 0 1px 3px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.05);
+  --shadow2: 0 2px 8px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.08);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html { height:100%; }
+body {
+  font-family:'Inter',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  height:100%;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── LAYOUT ── */
+.app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
+
+/* ── STATUS BAR AREA ── */
+.status-bar { height:env(safe-area-inset-top,44px); background:var(--white); flex-shrink:0; }
+
+/* ── HEADER ── */
+.header {
+  background:var(--white);
+  padding:16px 24px 12px;
+  flex-shrink:0;
+  border-bottom:1px solid var(--border);
+}
+.header-top { display:flex; justify-content:space-between; align-items:center; }
+.brand-mark {
+  display:flex;
+  flex-direction:column;
+}
+.brand-name {
+  font-family:'Cormorant Garamond',serif;
+  font-size:24px;
+  font-weight:400;
+  color:var(--ink);
+  letter-spacing:0.02em;
+  line-height:1;
+}
+.brand-sub {
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-top:3px;
+}
+.live-pill {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  background:var(--green-l);
+  border:1px solid rgba(42,92,63,.15);
+  border-radius:20px;
+  padding:5px 10px;
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--green);
+}
+.live-dot { width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite; }
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* ── SCROLL AREA ── */
+.scroll {
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  padding-bottom:calc(env(safe-area-inset-bottom,20px) + 72px);
+}
+.scroll::-webkit-scrollbar { display:none; }
+
+/* ── PAGE ── */
+.page { display:none; }
+.page.active { display:block; animation:fadeUp .28s cubic-bezier(.22,.68,0,1.2); }
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed;
+  bottom:0;
+  left:0; right:0;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:8px 4px calc(env(safe-area-inset-bottom,12px) + 8px);
+  display:flex;
+  flex-shrink:0;
+  z-index:100;
+}
+.nav-item {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  padding:4px 2px;
+  cursor:pointer;
+  background:none;
+  border:none;
+  transition:all .2s;
+}
+.nav-icon {
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.nav-icon svg { transition:all .2s; }
+.nav-label {
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--ink4);
+  transition:color .2s;
+}
+.nav-item.active .nav-label { color:var(--gold); }
+.nav-item.active .nav-icon svg { stroke:var(--gold); }
+.nav-item .nav-icon svg { stroke:var(--ink4); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ── HERO SECTION ── */
+.hero {
+  background:var(--white);
+  padding:28px 24px 24px;
+  margin-bottom:1px;
+}
+.hero-label {
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.hero-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.hero-amount {
+  font-family:'Cormorant Garamond',serif;
+  font-size:56px;
+  font-weight:300;
+  color:var(--ink);
+  line-height:1;
+  letter-spacing:-0.01em;
+}
+.hero-currency {
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;
+  font-weight:300;
+  color:var(--gold);
+  margin-left:4px;
+}
+.hero-sub {
+  font-size:11px;
+  color:var(--ink3);
+  margin-top:8px;
+  font-weight:300;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.hero-badge {
+  background:var(--gold-l);
+  border:1px solid var(--gold-m);
+  border-radius:4px;
+  padding:3px 8px;
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+}
+
+/* ── SECTION ── */
+.section { padding:0 16px; margin-top:12px; }
+.section-title {
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:10px;
+  padding:0 4px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.section-title-note { font-weight:300; letter-spacing:0.06em; text-transform:none; font-size:9px; }
+
+/* ── METRIC CARDS ── */
+.metrics-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.metric-card {
+  background:var(--white);
+  border-radius:16px;
+  padding:18px 16px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.metric-card.full { grid-column:1/-1; }
+.metric-card.gold-accent { background:linear-gradient(135deg,#FBF8F4 0%,#F5EDE3 100%); border:1px solid var(--gold-m); }
+.metric-card.red-accent { background:var(--red-l); border:1px solid rgba(125,46,46,.1); }
+.metric-card.green-accent { background:var(--green-l); border:1px solid rgba(42,92,63,.1); }
+.metric-lbl {
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:10px;
+}
+.metric-val {
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;
+  font-weight:400;
+  line-height:1;
+  color:var(--ink);
+}
+.metric-val.gold { color:var(--gold2); }
+.metric-val.red { color:var(--red); }
+.metric-val.green { color:var(--green); }
+.metric-val.sm { font-size:22px; }
+.metric-sub { font-size:10px; color:var(--ink3); margin-top:6px; font-weight:300; line-height:1.4; }
+.metric-line {
+  position:absolute;
+  top:0; left:0; right:0;
+  height:2px;
+}
+.metric-line.gold { background:linear-gradient(90deg,var(--gold),transparent); }
+.metric-line.red { background:linear-gradient(90deg,var(--red),transparent); }
+.metric-line.green { background:linear-gradient(90deg,var(--green),transparent); }
+
+/* ── PERSON CARDS ── */
+.person-card {
+  background:var(--white);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:var(--shadow);
+  margin-bottom:10px;
+  position:relative;
+  overflow:hidden;
+}
+.person-card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:3px; height:100%;
+}
+.person-card.pavel::before { background:var(--gold); }
+.person-card.kirill::before { background:#6A9FB5; }
+.person-card.legal::before { background:var(--ink4); }
+.person-card.archived { opacity:.4; }
+.person-card.archived::before { background:var(--ink4); }
+.person-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.person-left {}
+.person-name {
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px;
+  font-weight:400;
+  line-height:1;
+  margin-bottom:4px;
+}
+.person-name.pavel { color:var(--gold2); }
+.person-name.kirill { color:#4A7A94; }
+.person-role {
+  font-size:9px;
+  font-weight:400;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--ink3);
+}
+.person-right { text-align:right; }
+.person-amount {
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;
+  font-weight:400;
+  line-height:1;
+  margin-bottom:3px;
+}
+.person-pct {
+  font-size:10px;
+  color:var(--ink3);
+  font-weight:300;
+}
+.person-bar-wrap { margin-bottom:16px; }
+.person-bar-track { height:2px; background:var(--cream2); border-radius:1px; overflow:hidden; }
+.person-bar-fill { height:100%; border-radius:1px; transition:width 1s cubic-bezier(.22,.68,0,1); }
+.person-breakdown { display:flex; flex-direction:column; gap:6px; }
+.breakdown-row { display:flex; justify-content:space-between; align-items:baseline; }
+.breakdown-lbl { font-size:11px; color:var(--ink2); font-weight:300; }
+.breakdown-val { font-size:11px; color:var(--ink); font-weight:400; font-variant-numeric:tabular-nums; }
+
+/* ── CHART CARD ── */
+.chart-card {
+  background:var(--white);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:var(--shadow);
+  margin-bottom:10px;
+}
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.chart-title {
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--ink3);
+}
+.chart-badge {
+  font-size:9px;
+  font-weight:300;
+  color:var(--ink4);
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;
+  font-style:italic;
+}
+
+/* ── TX LIST ── */
+.tx-card {
+  background:var(--white);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.tx-card-header { padding:20px 22px 0; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.tx { display:flex; align-items:center; gap:12px; padding:12px 22px; border-bottom:1px solid var(--border); transition:background .1s; }
+.tx:last-child { border-bottom:none; }
+.tx:active { background:var(--cream); }
+.tx-stripe { width:2px; height:32px; border-radius:1px; flex-shrink:0; }
+.tx-body { flex:1; min-width:0; }
+.tx-desc { font-size:13px; color:var(--ink); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tx-meta { font-size:10px; color:var(--ink3); margin-top:2px; font-weight:300; }
+.tx-who { font-size:10px; font-weight:500; }
+.tx-amount { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:400; color:var(--ink); white-space:nowrap; }
+
+/* ── CATEGORY BARS ── */
+.cat-card { background:var(--white); border-radius:20px; padding:22px; box-shadow:var(--shadow); margin-bottom:10px; }
+.cat-item { margin-bottom:16px; }
+.cat-item:last-child { margin-bottom:0; }
+.cat-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.cat-name { font-size:12px; color:var(--ink); font-weight:400; }
+.cat-nums { display:flex; gap:8px; align-items:baseline; }
+.cat-pct { font-size:11px; font-weight:500; color:var(--gold2); }
+.cat-amt { font-size:10px; color:var(--ink3); font-weight:300; }
+.cat-track { height:3px; background:var(--cream2); border-radius:2px; overflow:hidden; }
+.cat-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(.22,.68,0,1); }
+
+/* ── MONTH BARS ── */
+.months-card { background:var(--white); border-radius:20px; padding:22px; box-shadow:var(--shadow); margin-bottom:10px; }
+.month-item { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+.month-item:last-child { margin-bottom:0; }
+.month-name { font-size:10px; color:var(--ink3); width:34px; flex-shrink:0; font-weight:300; letter-spacing:0.04em; }
+.month-track { flex:1; height:16px; background:var(--cream); border-radius:4px; overflow:hidden; position:relative; }
+.month-fill { height:100%; border-radius:4px; transition:width 1s cubic-bezier(.22,.68,0,1); position:relative; }
+.month-fill.current { box-shadow:0 0 12px rgba(168,128,98,.3); }
+.month-val { font-size:10px; color:var(--ink2); width:48px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
+
+/* ── BALANCE TABLE ── */
+.balance-card { background:var(--white); border-radius:20px; padding:22px; box-shadow:var(--shadow); margin-bottom:10px; }
+.balance-section { margin-bottom:16px; }
+.balance-section-title { font-size:9px; font-weight:500; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink3); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.balance-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); }
+.balance-row:last-child { border-bottom:none; }
+.balance-lbl { font-size:12px; color:var(--ink2); font-weight:300; }
+.balance-val { font-size:12px; color:var(--ink); font-weight:400; font-variant-numeric:tabular-nums; }
+.balance-row.total { padding-top:10px; margin-top:4px; border-top:1px solid var(--border2); border-bottom:none; }
+.balance-row.total .balance-lbl { font-weight:500; color:var(--gold2); }
+.balance-row.total .balance-val { font-weight:500; color:var(--gold2); font-family:'Cormorant Garamond',serif; font-size:16px; }
+.balance-row.negative .balance-lbl { color:var(--red); }
+.balance-row.negative .balance-val { color:var(--red); }
+
+/* ── OPU TABLE ── */
+.opu-scroll { overflow-x:auto; }
+.opu-table { width:100%; border-collapse:collapse; min-width:520px; }
+.opu-table th { font-size:9px; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink3); padding:7px 8px; text-align:right; border-bottom:1px solid var(--border); background:var(--cream); }
+.opu-table th:first-child { text-align:left; }
+.opu-table td { font-size:10px; color:var(--ink2); font-weight:300; padding:8px 8px; text-align:right; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums; }
+.opu-table td:first-child { text-align:left; font-size:11px; }
+.opu-table tr.sec td { color:var(--ink); font-weight:500; background:var(--cream); padding-top:12px; font-size:11px; }
+.opu-table tr.total td { color:var(--red); font-weight:600; border-top:2px solid rgba(125,46,46,.2); font-family:'Cormorant Garamond',serif; font-size:13px; background:var(--red-l); }
+
+/* ── CHIPS ── */
+.chips-wrap { padding:0 16px 8px; }
+.chips { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px; }
+.chips::-webkit-scrollbar { display:none; }
+.chip {
+  flex-shrink:0; font-size:10px; font-weight:400; letter-spacing:0.06em;
+  padding:7px 14px; border:1px solid var(--border); border-radius:20px;
+  color:var(--ink2); background:var(--white); cursor:pointer; transition:all .2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.chip.active { color:var(--gold2); border-color:var(--gold-m); background:var(--gold-l); box-shadow:none; }
+
+/* ── COUNT UP ANIMATION ── */
+@keyframes countUp { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+.count-up { animation:countUp .6s ease both; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:4px 0; }
+
+/* ── DONUT WRAP ── */
+.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-legend { flex:1; display:flex; flex-direction:column; gap:10px; }
+.legend-row { display:flex; align-items:center; gap:8px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-name { font-size:11px; color:var(--ink2); flex:1; font-weight:300; }
+.legend-pct { font-size:11px; font-weight:500; color:var(--ink); }
+
+/* ── EMPTY NOTE ── */
+.empty-note { text-align:center; padding:40px 20px; color:var(--ink3); font-size:12px; font-weight:300; }
+
+/* ── SCROLL INNER ── */
+.scroll-inner { overflow-y:auto; max-height:420px; }
+.scroll-inner::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="status-bar"></div>
+
+  <div class="header">
+    <div class="header-top">
+      <div class="brand-mark">
+        <div class="brand-name">Мебель РФ</div>
+        <div class="brand-sub">Финансовая панель</div>
+      </div>
+      <div class="live-pill">
+        <div class="live-dot"></div>
+        Live
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll">
+
+    <!-- ════ OVERVIEW ════ -->
+    <div class="page active" id="page-overview">
+
+      <div class="hero">
+        <div class="hero-label">Всего вложено учредителями</div>
+        <div>
+          <span class="hero-amount" id="hero-total">18 823 408</span><span class="hero-currency">₽</span>
+        </div>
+        <div class="hero-sub">
+          <span class="hero-badge">Авг 2025 — Июн 2026</span>
+          <span>2 учредителя · юр. лица</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="metrics-grid">
+          <div class="metric-card red-accent">
+            <div class="metric-line red"></div>
+            <div class="metric-lbl">Убыток накопл.</div>
+            <div class="metric-val red sm">−14,0 млн</div>
+            <div class="metric-sub">операционный</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Май 2026</div>
+            <div class="metric-val sm" id="m-may">0,19 млн</div>
+            <div class="metric-sub">текущий период · июнь</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:14px;">
+        <div class="section-title">Расходы по месяцам</div>
+        <div class="months-card">
+          <div id="months-chart-wrap"><canvas id="c-months" height="170"></canvas></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Структура расходов</div>
+        <div class="cat-card" id="cat-list"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Последние операции <span class="section-title-note">апрель — май</span></div>
+        <div class="tx-card">
+          <div class="tx-list" id="recent-tx"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ INVESTORS ════ -->
+    <div class="page" id="page-investors">
+
+      <div class="section" style="margin-top:16px;">
+        <div class="person-card pavel">
+          <div class="person-top">
+            <div class="person-left">
+              <div class="person-name pavel">Павел</div>
+              <div class="person-role">Учредитель</div>
+            </div>
+            <div class="person-right">
+              <div class="person-amount" id="inv-p-amt" style="color:var(--gold2)">9 502 730 ₽</div>
+              <div class="person-pct" id="inv-p-pct">55% вложений</div>
+            </div>
+          </div>
+          <div class="person-bar-wrap">
+            <div class="person-bar-track">
+              <div class="person-bar-fill" id="inv-p-bar" style="background:var(--gold);width:0%"></div>
+            </div>
+          </div>
+          <div class="person-breakdown">
+            <div class="breakdown-row"><span class="breakdown-lbl">Ремонт (Антон)</span><span class="breakdown-val">3 750 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Аренда помещения</span><span class="breakdown-val">1 474 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">ЗП сотрудников</span><span class="breakdown-val">890 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Маркетинг · СММ</span><span class="breakdown-val">572 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Мебель · Китай</span><span class="breakdown-val">478 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Прочее</span><span class="breakdown-val">869 271 ₽</span></div>
+          </div>
+        </div>
+
+        <div class="person-card kirill">
+          <div class="person-top">
+            <div class="person-left">
+              <div class="person-name kirill">Кирилл</div>
+              <div class="person-role">Учредитель</div>
+            </div>
+            <div class="person-right">
+              <div class="person-amount" id="inv-k-amt" style="color:#4A7A94">5 436 483 ₽</div>
+              <div class="person-pct" id="inv-k-pct">31% вложений</div>
+            </div>
+          </div>
+          <div class="person-bar-wrap">
+            <div class="person-bar-track">
+              <div class="person-bar-fill" id="inv-k-bar" style="background:#6A9FB5;width:0%"></div>
+            </div>
+          </div>
+          <div class="person-breakdown">
+            <div class="breakdown-row"><span class="breakdown-lbl">Аренда помещения</span><span class="breakdown-val">847 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Ремонт · Строители</span><span class="breakdown-val">826 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Мебель · Китай</span><span class="breakdown-val">478 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">ЗП · Переводчики</span><span class="breakdown-val">402 000 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Прочее</span><span class="breakdown-val">2 801 383 ₽</span></div>
+          </div>
+        </div>
+
+        <div class="person-card legal" style="opacity:.6">
+          <div class="person-top">
+            <div class="person-left">
+              <div class="person-name" style="color:var(--ink2);font-size:22px">Турбо-Подс · ИП</div>
+              <div class="person-role">Юридические лица</div>
+            </div>
+            <div class="person-right">
+              <div class="person-amount" id="inv-t-amt" style="color:var(--ink2)">2 826 314 ₽</div>
+              <div class="person-pct">10% вложений</div>
+            </div>
+          </div>
+          <div class="person-breakdown">
+            <div class="breakdown-row"><span class="breakdown-lbl">Техника (экспо)</span><span class="breakdown-val">495 419 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">CRM · Битрикс</span><span class="breakdown-val">316 596 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">Переводчики</span><span class="breakdown-val">235 200 ₽</span></div>
+            <div class="breakdown-row"><span class="breakdown-lbl">СММ · Маркетинг</span><span class="breakdown-val">380 000 ₽</span></div>
+          </div>
+        </div>
+
+        <div class="person-card archived">
+          <div class="person-top">
+            <div class="person-left">
+              <div class="person-name" style="color:var(--ink2);font-size:22px">Эльвин / Эмин</div>
+              <div class="person-role">Вышел из проекта</div>
+            </div>
+            <div class="person-right">
+              <div class="person-amount" style="color:var(--ink2)">1 057 881 ₽</div>
+              <div class="person-pct">архивные данные</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Динамика вложений</span>
+            <span class="chart-badge">по месяцам</span>
+          </div>
+          <canvas id="c-inv" height="160"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ EXPENSES ════ -->
+    <div class="page" id="page-expenses">
+
+      <div class="section" style="margin-top:16px;">
+        <div class="metrics-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="metric-card gold-accent">
+            <div class="metric-lbl">Всего</div>
+            <div class="metric-val gold sm" style="font-size:20px">20,4м</div>
+            <div class="metric-sub">10 мес.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Максимум</div>
+            <div class="metric-val sm" style="font-size:20px">3,1м</div>
+            <div class="metric-sub">фев 2026</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Среднее</div>
+            <div class="metric-val sm" style="font-size:20px">1,9м</div>
+            <div class="metric-sub">в месяц</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:14px;">По месяцам</div>
+        <div class="months-card" id="months-bars"></div>
+
+        <div class="section-title" style="margin-top:2px;">Накопленные расходы</div>
+        <div class="chart-card" style="margin-top:0">
+          <canvas id="c-cum" height="140"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ OPU ════ -->
+    <div class="page" id="page-pnl">
+
+      <div class="section" style="margin-top:16px;">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-lbl">Выручка</div>
+            <div class="metric-val sm">0 ₽</div>
+            <div class="metric-sub">продажи только начались</div>
+          </div>
+          <div class="metric-card red-accent">
+            <div class="metric-line red"></div>
+            <div class="metric-lbl">Убыток накопл.</div>
+            <div class="metric-val red sm">−14,0 млн</div>
+            <div class="metric-sub">операционный</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:14px;">Динамика убытка</div>
+        <div class="chart-card" style="margin-top:0">
+          <canvas id="c-loss" height="140"></canvas>
+        </div>
+
+        <div class="section-title" style="margin-top:2px;">ОПиУ · авг 2025 — апр 2026 <span class="section-title-note">← свайп →</span></div>
+        <div class="chart-card" style="padding:16px;margin-top:0">
+          <div class="opu-scroll">
+            <table class="opu-table">
+              <thead><tr>
+                <th>Статья</th><th>Авг</th><th>Сен</th><th>Окт</th><th>Ноя</th><th>Дек</th><th>Янв</th><th>Фев</th><th>Мар</th><th>Апр</th>
+              </tr></thead>
+              <tbody>
+                <tr class="sec"><td colspan="10">Адм. расходы</td></tr>
+                <tr><td>— ФОТ</td><td>130к</td><td>130к</td><td>305к</td><td>156к</td><td>237к</td><td>156к</td><td>185к</td><td>300к</td><td>225к</td></tr>
+                <tr><td>— Прочее</td><td>143к</td><td>107к</td><td>27к</td><td>209к</td><td>199к</td><td>153к</td><td>282к</td><td>374к</td><td>453к</td></tr>
+                <tr class="sec"><td colspan="10">Коммерч. расходы</td></tr>
+                <tr><td>— Аренда</td><td>—</td><td>150к</td><td>250к</td><td>250к</td><td>250к</td><td>550к</td><td>550к</td><td>554к</td><td>570к</td></tr>
+                <tr><td>— Ремонт</td><td>—</td><td>205к</td><td>200к</td><td>—</td><td>1500к</td><td>800к</td><td>2095к</td><td>448к</td><td>452к</td></tr>
+                <tr><td>— ФОТ продаж</td><td>—</td><td>—</td><td>—</td><td>—</td><td>95к</td><td>95к</td><td>140к</td><td>274к</td><td>443к</td></tr>
+                <tr class="total"><td>УБЫТОК</td><td>−273к</td><td>−592к</td><td>−782к</td><td>−615к</td><td>−2131к</td><td>−1754к</td><td>−3252к</td><td>−1949к</td><td>−1691к</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ BALANCE ════ -->
+    <div class="page" id="page-balance">
+
+      <div class="section" style="margin-top:16px;">
+        <div class="metrics-grid">
+          <div class="metric-card gold-accent">
+            <div class="metric-line gold"></div>
+            <div class="metric-lbl">Итого активы</div>
+            <div class="metric-val gold sm">3 306 912 ₽</div>
+            <div class="metric-sub">апрель 2026</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-lbl">Осн. средства</div>
+            <div class="metric-val sm">1 694 843 ₽</div>
+            <div class="metric-sub">техника и мебель</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:14px;">Структура активов</div>
+        <div class="chart-card" style="margin-top:0">
+          <div class="donut-wrap">
+            <canvas id="c-bal" width="130" height="130" style="flex-shrink:0"></canvas>
+            <div class="donut-legend">
+              <div class="legend-row"><div class="legend-dot" style="background:var(--gold)"></div><span class="legend-name">Осн. средства</span><span class="legend-pct">51%</span></div>
+              <div class="legend-row"><div class="legend-dot" style="background:#6A9FB5"></div><span class="legend-name">Дебит. задолж.</span><span class="legend-pct">44%</span></div>
+              <div class="legend-row"><div class="legend-dot" style="background:var(--ink4)"></div><span class="legend-name">НДС к вычету</span><span class="legend-pct">5%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:2px;">Баланс · апрель 2026</div>
+        <div class="balance-card" style="margin-top:0">
+          <div class="balance-section">
+            <div class="balance-section-title">Активы</div>
+            <div class="balance-row"><span class="balance-lbl">Основные средства</span><span class="balance-val">1 694 843 ₽</span></div>
+            <div class="balance-row"><span class="balance-lbl">Дебиторская задолж.</span><span class="balance-val">1 462 757 ₽</span></div>
+            <div class="balance-row"><span class="balance-lbl">НДС к вычету</span><span class="balance-val">158 228 ₽</span></div>
+            <div class="balance-row"><span class="balance-lbl">Денежные средства</span><span class="balance-val">−8 916 ₽</span></div>
+            <div class="balance-row total"><span class="balance-lbl">Итого активы</span><span class="balance-val">3 306 912 ₽</span></div>
+          </div>
+          <div class="balance-section">
+            <div class="balance-section-title">Пассивы</div>
+            <div class="balance-row"><span class="balance-lbl">Собственные средства</span><span class="balance-val">17 308 271 ₽</span></div>
+            <div class="balance-row negative"><span class="balance-lbl">Накопленный убыток</span><span class="balance-val">−14 001 359 ₽</span></div>
+            <div class="balance-row total"><span class="balance-lbl">Итого пассивы</span><span class="balance-val">3 306 912 ₽</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════ OPS ════ -->
+    <div class="page" id="page-ops">
+      <div style="height:12px"></div>
+      <div class="chips-wrap">
+        <div class="chips">
+          <button class="chip active" onclick="filt('all',this)">Все</button>
+          <button class="chip" onclick="filt('pavel',this)">Павел</button>
+          <button class="chip" onclick="filt('kirill',this)">Кирилл</button>
+          <button class="chip" onclick="filt('turbo',this)">Турбо-Подс</button>
+          <button class="chip" onclick="filt('ip',this)">ИП</button>
+          <button class="chip" onclick="filt('jun',this)">Июн 2026</button>
+          <button class="chip" onclick="filt('may',this)">Май 2026</button>
+          <button class="chip" onclick="filt('apr',this)">Апр 2026</button>
+          <button class="chip" onclick="filt('mar',this)">Мар 2026</button>
+          <button class="chip" onclick="filt('feb',this)">Фев 2026</button>
+        </div>
+      </div>
+      <div class="section" style="margin-top:4px;">
+        <div class="section-title">Операции <span class="section-title-note" id="ops-count">—</span></div>
+        <div class="tx-card">
+          <div class="scroll-inner">
+            <div class="tx-list" id="all-tx"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="go('overview',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+      <div class="nav-label">Обзор</div>
+    </button>
+    <button class="nav-item" onclick="go('investors',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></div>
+      <div class="nav-label">Учредители</div>
+    </button>
+    <button class="nav-item" onclick="go('expenses',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="nav-label">Расходы</div>
+    </button>
+    <button class="nav-item" onclick="go('pnl',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/></svg></div>
+      <div class="nav-label">ОПиУ</div>
+    </button>
+    <button class="nav-item" onclick="go('balance',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="nav-label">Баланс</div>
+    </button>
+    <button class="nav-item" onclick="go('ops',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24" width="20" height="20"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+      <div class="nav-label">Операции</div>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+// ── DATA ──
+const API_KEY = 'AIzaSyCHwei47Imky09D2pfkWF46uK3liWxe4Bo';
+const SHEET_ID = '1-cO5W_n5PtTK0-Vo34wIiCUPFMw6zflyDsqBOcYwnJw';
+const SHEET_NAME = 'Расходы компании';
+
+const MONTHS = ['Авг','Сен','Окт','Ноя','Дек','Янв','Фев','Мар','Апр','Май','Июн'];
+const EXP = [1920320,1068444,1737591,614971,2130542,2058600,3144783,2074978,2285377,1601573,186229];
+const PAV = [753200,484622,1006791,509671,2000157,1832000,912200,584190,1262970,369959,0];
+const KIR = [620827,443822,930827,105300,76727,1091776,1012980,604000,505151,269900,80100];
+
+const WC = {pavel:'#A88062',kirill:'#6A9FB5',turbo:'#B5A89A',ip:'#8AAF94',elvin:'#C4C0BA'};
+const WN = {pavel:'Павел',kirill:'Кирилл',turbo:'Турбо-Подс',ip:'ИП',elvin:'Эльвин'};
+
+const CATS = [
+  {n:'Ремонт и строители',pct:42,amt:'~8,0 млн',c:'#A88062'},
+  {n:'Аренда помещения',pct:18,amt:'~3,4 млн',c:'#6A9FB5'},
+  {n:'ФОТ · Зарплаты',pct:15,amt:'~2,8 млн',c:'#7FAF8A'},
+  {n:'Оборудование · Техника',pct:11,amt:'~2,1 млн',c:'#B5A89A'},
+  {n:'Маркетинг · СММ',pct:7,amt:'~1,3 млн',c:'#8A8680'},
+  {n:'Переводчики · Прочее',pct:7,amt:'~1,3 млн',c:'#C4C0BA'},
+];
+
+const TX = [
+  // ИЮНЬ 2026
+  {d:'03.06',desc:'ЗП Софии (15-31 мая)',w:'kirill',a:31600},
+  {d:'03.06',desc:'Оплата уборки',w:'kirill',a:16500},
+  {d:'03.06',desc:'Оплата девочек СММ',w:'turbo',a:95000},
+  {d:'03.06',desc:'Оплата телефонии',w:'turbo',a:11129},
+  {d:'03.06',desc:'Олегу за расходы',w:'kirill',a:32000},
+  // МАЙ 2026
+  {d:'30.05',desc:'Оплата дворнику',w:'kirill',a:2000},
+  {d:'29.05',desc:'ЗП Олегу + за расходы',w:'pavel',a:69459},
+  {d:'29.05',desc:'Оплата растений кашпо',w:'turbo',a:95200},
+  {d:'29.05',desc:'Оплата комус',w:'turbo',a:6482},
+  {d:'28.05',desc:'Оплата Авито продвижения',w:'turbo',a:5000},
+  {d:'26.05',desc:'Оплата Яндекс Директа',w:'turbo',a:36600},
+  {d:'23.05',desc:'ЗП Светлане, Михаилу, Яне, Софии',w:'pavel',a:122640},
+  {d:'21.05',desc:'Антону за кондиционер и перевод',w:'pavel',a:42000},
+  {d:'20.05',desc:'Аренда помещения за май',w:'ip',a:550000},
+  {d:'19.05',desc:'Оплата Елене на расходы офиса',w:'kirill',a:60000},
+  {d:'19.05',desc:'Оплата уборщицы',w:'kirill',a:10000},
+  {d:'19.05',desc:'Расходы Олегу',w:'kirill',a:10000},
+  {d:'19.05',desc:'Оплата монтажа лайтбоксов',w:'kirill',a:6000},
+  {d:'19.05',desc:'Ремонт принтера',w:'kirill',a:3000},
+  {d:'19.05',desc:'Оплата воды',w:'turbo',a:2272},
+  {d:'19.05',desc:'Оплата охранных табличек',w:'turbo',a:6500},
+  {d:'19.05',desc:'Оплата ВБ аккаунта',w:'turbo',a:5000},
+  {d:'15.05',desc:'Букет Елене на ДР',w:'pavel',a:15000},
+  {d:'13.05',desc:'ЗП Олегу',w:'kirill',a:65000},
+  {d:'13.05',desc:'Расчёт с Алевтиной',w:'kirill',a:50900},
+  {d:'13.05',desc:'Предоплата декоратора',w:'turbo',a:10000},
+  {d:'12.05',desc:'Парсинг конкурентов',w:'turbo',a:99000},
+  {d:'12.05',desc:'Лайтбокс и макет на входе',w:'turbo',a:34000},
+  {d:'12.05',desc:'Печать буклетов',w:'turbo',a:7600},
+  {d:'12.05',desc:'Оплата телефонии',w:'turbo',a:9060},
+  {d:'08.05',desc:'ЗП сотрудникам (Алевтина, София, Светлана)',w:'pavel',a:120860},
+  {d:'07.05',desc:'ЗП Михаилу (15-30 апреля)',w:'kirill',a:50000},
+  {d:'05.05',desc:'Оплата девочек СММ',w:'turbo',a:95000},
+  {d:'04.05',desc:'Мелкие расходы офиса + Клод',w:'kirill',a:13000},
+  // АПРЕЛЬ 2026
+  {d:'30.04',desc:'Оплата вывески',w:'ip',a:66000},
+  {d:'30.04',desc:'Оплата ПРМ онлайн',w:'ip',a:26400},
+  {d:'30.04',desc:'Оплата дельты',w:'ip',a:18100},
+  {d:'30.04',desc:'Оплата кассы Эвотор',w:'ip',a:44700},
+  {d:'30.04',desc:'Оплата Комус',w:'turbo',a:49036},
+  {d:'30.04',desc:'Оплата уборки + инет',w:'kirill',a:36000},
+  {d:'29.04',desc:'Перевод Олегу ЗП',w:'kirill',a:40000},
+  {d:'28.04',desc:'Перевод Олегу части ЗП',w:'kirill',a:44000},
+  {d:'24.04',desc:'Перевод Елене и Михаилу на расходы',w:'kirill',a:45700},
+  {d:'20.04',desc:'ЗП сотрудникам (1–15 апреля)',w:'kirill',a:170851},
+  {d:'20.04',desc:'Оплата Озон',w:'pavel',a:64000},
+  {d:'15.04',desc:'ЗП Олегу + ужин китайцам',w:'kirill',a:94000},
+  {d:'14.04',desc:'Переводчик на обучении',w:'turbo',a:13000},
+  {d:'10.04',desc:'Ремонт Антону',w:'pavel',a:452000},
+  {d:'10.04',desc:'Бертазонни (техника)',w:'turbo',a:142700},
+  {d:'10.04',desc:'Телефония + ПРМ + вода',w:'ip',a:42320},
+  {d:'08.04',desc:'Вывоз мусора',w:'kirill',a:11000},
+  {d:'07.04',desc:'ЗП сотрудников (мар 15–31)',w:'pavel',a:176970},
+  {d:'07.04',desc:'Вывоз мусора + юрист',w:'kirill',a:20000},
+  {d:'06.04',desc:'Аренда + ЭЦП + ИП',w:'pavel',a:570000},
+  {d:'03.04',desc:'СММ-команда',w:'turbo',a:95000},
+  {d:'03.04',desc:'Доработки сайта',w:'turbo',a:20000},
+  {d:'02.04',desc:'АйТишник',w:'kirill',a:6000},
+  // МАРТ 2026
+  {d:'31.03',desc:'Внедрение Битрикс',w:'turbo',a:183176},
+  {d:'30.03',desc:'ЗП Олегу',w:'pavel',a:65000},
+  {d:'29.03',desc:'Ремонт Антону',w:'pavel',a:65000},
+  {d:'19.03',desc:'ЗП сотрудников (1-15 марта)',w:'pavel',a:133490},
+  {d:'11.03',desc:'ЗП сотрудников (февраль)',w:'pavel',a:140100},
+  {d:'11.03',desc:'Строители',w:'kirill',a:216000},
+  {d:'06.03',desc:'Переводчик',w:'turbo',a:180000},
+  {d:'05.03',desc:'Ремонт Антону',w:'pavel',a:150600},
+  {d:'04.03',desc:'СММ-команда',w:'turbo',a:95000},
+  {d:'02.03',desc:'Техника Аско + Либхер (экспо)',w:'turbo',a:495419},
+];
+
+// ── NAVIGATION ──
+function go(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── TX RENDER ──
+function renderTx(el, list) {
+  el.innerHTML = list.map(t=>`
+    <div class="tx">
+      <div class="tx-stripe" style="background:${WC[t.w]||'#ccc'}"></div>
+      <div class="tx-body">
+        <div class="tx-desc">${t.desc}</div>
+        <div class="tx-meta">${t.d} · <span class="tx-who" style="color:${WC[t.w]}">${WN[t.w]||t.w}</span></div>
+      </div>
+      <div class="tx-amount">${t.a.toLocaleString('ru-RU')} ₽</div>
+    </div>`).join('');
+}
+renderTx(document.getElementById('recent-tx'), TX.slice(0,10));
+
+// ── FILTER OPS ──
+let curFilt='all';
+function filt(f,btn) {
+  curFilt=f; window._curFilt=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  const mo={may:'.05',apr:'.04',mar:'.03',feb:'.02',jun:'.06'};
+  // Используем живые данные если загружены, иначе статические
+  let source=window._liveTX||TX;
+  let list=source;
+  if(['pavel','kirill','turbo','ip','elvin'].includes(f)) list=source.filter(t=>t.w===f);
+  else if(mo[f]) list=source.filter(t=>t.d.endsWith(mo[f]));
+  document.getElementById('ops-count').textContent=list.length+' записей';
+  renderTx(document.getElementById('all-tx'), list);
+}
+filt('all',document.querySelector('.chip'));
+
+// ── CATEGORIES ──
+const catEl = document.getElementById('cat-list');
+catEl.style.padding='22px';
+catEl.innerHTML = CATS.map(c=>`
+  <div class="cat-item">
+    <div class="cat-row">
+      <span class="cat-name">${c.n}</span>
+      <div class="cat-nums">
+        <span class="cat-amt">${c.amt}</span>
+        <span class="cat-pct">${c.pct}%</span>
+      </div>
+    </div>
+    <div class="cat-track">
+      <div class="cat-fill" style="width:0%;background:${c.c}" data-w="${c.pct}"></div>
+    </div>
+  </div>`).join('');
+
+// ── MONTH BARS ──
+const maxE = Math.max(...EXP);
+document.getElementById('months-bars').innerHTML = `<div style="padding:4px 0">`+MONTHS.map((m,i)=>`
+  <div class="month-item">
+    <div class="month-name">${m}</div>
+    <div class="month-track">
+      <div class="month-fill${i===9?' current':''}" data-w="${Math.round(EXP[i]/maxE*100)}"
+        style="width:0%;background:${i===9?'var(--gold)':i===6?'var(--red)':'var(--ink4)'}"></div>
+    </div>
+    <div class="month-val">${(EXP[i]/1000).toFixed(0)}к</div>
+  </div>`).join('')+`</div>`;
+
+// Animate bars after render
+setTimeout(()=>{
+  document.querySelectorAll('[data-w]').forEach(el=>{
+    el.style.transition='width 1.1s cubic-bezier(.22,.68,0,1)';
+    el.style.width=el.dataset.w+'%';
+  });
+  // Animate investor bars
+  const pavPct=57,kirPct=33;
+  document.getElementById('inv-p-bar').style.cssText+='transition:width 1.2s cubic-bezier(.22,.68,0,1);width:'+pavPct+'%';
+  document.getElementById('inv-k-bar').style.cssText+='transition:width 1.2s cubic-bezier(.22,.68,0,1);width:'+kirPct+'%';
+},100);
+
+// ── CHARTS ──
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.font.size=9;
+Chart.defaults.color='#8A8680';
+Chart.defaults.borderColor='rgba(0,0,0,.06)';
+
+const gc='rgba(0,0,0,.05)';
+
+// Months bar
+new Chart(document.getElementById('c-months'),{
+  type:'bar',
+  data:{labels:MONTHS,datasets:[{
+    data:EXP,
+    backgroundColor:MONTHS.map((_,i)=>i===9?'rgba(168,128,98,.85)':i===6?'rgba(125,46,46,.55)':'rgba(0,0,0,.07)'),
+    borderColor:MONTHS.map((_,i)=>i===9?'#A88062':i===6?'#7D2E2E':'rgba(0,0,0,.08)'),
+    borderWidth:1,borderRadius:6,borderSkipped:false,
+  }]},
+  options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${c.parsed.y.toLocaleString('ru-RU')} ₽`},backgroundColor:'#fff',titleColor:'#0D0D0D',bodyColor:'#8A8680',borderColor:'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8}},
+  scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:gc,drawBorder:false},border:{display:false},ticks:{callback:v=>(v/1000000).toFixed(1)+'м'}}}}
+});
+
+// Investors stacked
+new Chart(document.getElementById('c-inv'),{
+  type:'bar',
+  data:{labels:MONTHS,datasets:[
+    {label:'Павел',data:PAV,backgroundColor:'rgba(168,128,98,.55)',borderRadius:4},
+    {label:'Кирилл',data:KIR,backgroundColor:'rgba(106,159,181,.55)',borderRadius:4},
+  ]},
+  options:{responsive:true,plugins:{legend:{display:true,labels:{boxWidth:8,padding:14,font:{size:10}}},tooltip:{callbacks:{label:c=>`  ${c.dataset.label}: ${c.parsed.y.toLocaleString('ru-RU')} ₽`},backgroundColor:'#fff',titleColor:'#0D0D0D',bodyColor:'#8A8680',borderColor:'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8}},
+  scales:{x:{stacked:true,grid:{display:false},border:{display:false}},y:{stacked:true,grid:{color:gc},border:{display:false},ticks:{callback:v=>(v/1000).toFixed(0)+'к'}}}}
+});
+
+// Cumulative
+const CUM=EXP.reduce((a,v,i)=>{a.push((a[i-1]||0)+v);return a;},[]);
+new Chart(document.getElementById('c-cum'),{
+  type:'line',
+  data:{labels:MONTHS,datasets:[{data:CUM,borderColor:'#A88062',backgroundColor:'rgba(168,128,98,.06)',tension:.4,fill:true,pointRadius:MONTHS.map((_,i)=>i===MONTHS.length-1?5:3),pointBackgroundColor:'#A88062',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2}]},
+  options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${(c.parsed.y/1000000).toFixed(2)} млн ₽`},backgroundColor:'#fff',titleColor:'#0D0D0D',bodyColor:'#8A8680',borderColor:'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8}},
+  scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:gc},border:{display:false},ticks:{callback:v=>(v/1000000).toFixed(0)+'м'}}}}
+});
+
+// Loss
+const LOSS=[-272563,-864763,-1646354,-2261325,-4391867,-6150467,-9402543,-11351909,-14001359];
+const LOSS_LABELS=MONTHS.slice(0,-2); // Авг-Апр = 9 месяцев (закрытые)
+new Chart(document.getElementById('c-loss'),{
+  type:'line',
+  data:{labels:LOSS_LABELS,datasets:[{data:LOSS,borderColor:'#7D2E2E',backgroundColor:'rgba(125,46,46,.05)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#7D2E2E',pointBorderColor:'#fff',pointBorderWidth:1.5,borderWidth:2}]},
+  options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  −${Math.abs(c.parsed.y).toLocaleString('ru-RU')} ₽`},backgroundColor:'#fff',titleColor:'#0D0D0D',bodyColor:'#8A8680',borderColor:'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8}},
+  scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:gc},border:{display:false},ticks:{callback:v=>(v/1000000).toFixed(0)+'м'}}}}
+});
+
+// Balance donut
+new Chart(document.getElementById('c-bal'),{
+  type:'doughnut',
+  data:{labels:['Осн. средства','Дебит. задолж.','НДС к вычету'],
+    datasets:[{data:[1694843,1462757,158228],backgroundColor:['#A88062','#6A9FB5','#C4C0BA'],borderWidth:0,hoverOffset:6}]},
+  options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${c.parsed.toLocaleString('ru-RU')} ₽`},backgroundColor:'#fff',titleColor:'#0D0D0D',bodyColor:'#8A8680',borderColor:'rgba(0,0,0,.1)',borderWidth:1,cornerRadius:8}}}
+});
+
+// ── LIVE DATA ──
+async function loadLive(){
+  if(API_KEY==='ВСТАВЬ_СВОЙ_API_КЛЮЧ_ЗДЕСЬ') return;
+  try {
+    // Загружаем счётчики учредителей
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!J2:N2')}?key=${API_KEY}`;
+    const r=await fetch(url);
+    if(!r.ok) return;
+    const d=await r.json();
+    if(!d.values||!d.values[0]) return;
+    const row=d.values[0];
+    const pv=parseNum(row[2]),kv=parseNum(row[1]),tv=parseNum(row[3]),iv=parseNum(row[4]),ev=parseNum(row[0]);
+    const total=pv+kv+tv+iv+ev;
+    if(total>0){
+      document.getElementById('hero-total').textContent=total.toLocaleString('ru-RU');
+      document.getElementById('inv-p-amt').textContent=pv.toLocaleString('ru-RU')+' ₽';
+      document.getElementById('inv-k-amt').textContent=kv.toLocaleString('ru-RU')+' ₽';
+      document.getElementById('inv-t-amt').textContent=(tv+iv).toLocaleString('ru-RU')+' ₽';
+      const active=pv+kv+tv+iv;
+      document.getElementById('inv-p-pct').textContent=Math.round(pv/active*100)+'% вложений';
+      document.getElementById('inv-k-pct').textContent=Math.round(kv/active*100)+'% вложений';
+    }
+  } catch(e){}
+
+  try {
+    // Загружаем последние операции из таблицы (строки 2-500)
+    const url2=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A2:F500')}?key=${API_KEY}`;
+    const r2=await fetch(url2);
+    if(!r2.ok) return;
+    const d2=await r2.json();
+    if(!d2.values) return;
+
+    // Парсим транзакции из таблицы
+    // Останавливаемся когда видим пустую дату + слово ИЮНЬ/ИЮЛЬ (конец расходов)
+    const liveTX=[];
+    let stopParsing=false;
+    for(const row of d2.values){
+      if(stopParsing) break;
+      if(!row||row.length<2) continue;
+      const dateCell=String(row[0]||'').trim();
+      const descCell=String(row[1]||'').trim().toUpperCase();
+      const whoCell=String(row[2]||'').trim();
+      const amtCell=String(row[5]||'').trim();
+
+      // Если дата пустая и описание = название месяца после МАЯ - стоп
+      if(!dateCell && (descCell.startsWith('ИЮНЬ') || descCell.startsWith('ИЮЛЬ') || descCell.startsWith('АВГУСТ'))) {
+        stopParsing = true;
+        break;
+      }
+      // Пропускаем строки-заголовки месяцев
+      if(!dateCell) continue;
+      // Проверяем формат даты ДД.ММ.ГГГГ
+      if(!dateCell.match(/^\d{1,2}[.\/]\d{1,2}/)) continue;
+      // Берём сумму только из колонки F (индекс 5) - это "СУММА В РУБ"
+      if(!amtCell || amtCell==='') continue;
+      const amt=parseNum(amtCell);
+      if(amt<=0) continue;
+      const who=detectWho(whoCell);
+      // Формат даты: берём ДД.ММ
+      const parts=dateCell.split('.');
+      const shortDate=parts.length>=2 ? parts[0]+'.'+parts[1] : dateCell.substring(0,5);
+      liveTX.push({d:shortDate,desc:String(row[1]||'').trim(),w:who,a:amt});
+    }
+
+    if(liveTX.length>0){
+      // Последние сверху (разворачиваем)
+      const reversed=[...liveTX].reverse();
+      renderTx(document.getElementById('recent-tx'),reversed.slice(0,10));
+      // Обновляем TX глобальный для фильтров
+      window._liveTX=reversed;
+      if(document.getElementById('page-ops').classList.contains('active')){
+        filt(window._curFilt||'all',document.querySelector('.chip.active'));
+      }
+      // Обновляем май в метрике
+      // Фильтр мая: дата ДД.05 (только месяц 05)
+      // Автоматически определяем текущий месяц по последней транзакции
+      const lastDate = liveTX[0]?.d || '';
+      const lastMonthNum = lastDate.split('.')[1] || '06';
+      const curMonthTX = liveTX.filter(t=>{
+        const p=t.d.split('.');
+        return p.length>=2 && p[1]===lastMonthNum;
+      });
+      const curTotal = curMonthTX.reduce((s,t)=>s+t.a,0);
+      if(curTotal>0){
+        document.getElementById('m-may').textContent=(curTotal/1000000).toFixed(2).replace('.',',')+' млн';
+      }
+    }
+  } catch(e){ console.warn('TX load error:',e); }
+}
+
+function detectWho(s){
+  if(!s) return 'other';
+  const l=s.toLowerCase();
+  if(l.includes('турбо')||l.includes('turbo')) return 'turbo';
+  if(l.includes(' ип')||l.startsWith('ип')) return 'ip';
+  if(l.includes('павел')||l.includes('паша')) return 'pavel';
+  if(l.includes('кирилл')) return 'kirill';
+  if(l.includes('эльвин')||l.includes('эмин')) return 'elvin';
+  return 'other';
+}
+function parseNum(s){
+  if(!s) return 0;
+  return parseFloat(String(s).replace(/[рp]\./gi,'').replace(/руб/gi,'').replace(/[^\d.,\-]/g,'').replace(',','.'))||0;
+}
+loadLive();
+setInterval(loadLive,5*60*1000);
+</script>
+</body>
+</html>
